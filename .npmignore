@@ -1,0 +1,24 @@
+# Ignore everything except dist/
+*
+!dist/
+!package.json
+!README.md
+!LICENSE
+!CHANGELOG.md
+
+# TS sources if you want to publish typings
+!src/**/*.ts
+!src/**/*.tsx
+
+# Ignore playground, tests, configs
+examples/
+tests/
+coverage/
+node_modules/
+.vscode/
+.idea/
+tsconfig.json
+tsconfig.build.json
+vite.config.ts
+pnpm-lock.yaml
+package-lock.json

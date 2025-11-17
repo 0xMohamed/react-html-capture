@@ -1,0 +1,33 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+
+# Build output
+dist/
+build/
+coverage/
+
+# TS
+*.tsbuildinfo
+
+# IDE / OS junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local env files
+.env
+.env.*
+!.env.example
+
+# Playground build
+examples/playground/dist/
+
+# Temporary
+*.local
+*.cache/
