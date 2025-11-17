@@ -136,8 +136,9 @@ Contributions are welcome! Please submit a Pull Request or open an issue.
 
 ## 📖 Learn More
 
-html-to-image Documentation
-MDN: Canvas & Blob APIs
+- [html-to-image Documentation](https://github.com/bubkoo/html-to-image#readme)
+- [MDN: Canvas API](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API)
+- [MDN: Blob API](https://developer.mozilla.org/en-US/docs/Web/API/Blob)
 
 ## 📄 License
 
