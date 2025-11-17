@@ -2,7 +2,7 @@
   "name": "react-html-capture",
   "private": false,
   "description": "A modern React hook for capturing HTML nodes to images with crop, watermark, and auto-capture features",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
