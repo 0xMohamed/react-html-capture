@@ -1,4 +1,4 @@
-# react-html-capture
+# React Html Capture
 
 A modern **React hook** for capturing HTML nodes as images — with **crop**, **watermark**, **auto-capture**, and **Shadow DOM support**.  
 Lightweight, flexible, and perfect for exporting UI elements, receipts, charts, or custom components.
