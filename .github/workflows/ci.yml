@@ -5,49 +5,42 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 jobs:
   build-and-release:
     name: Build → Test → Release
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: write
-      pages: write
-      id-token: write
+    outputs:
+      pages_artifact: ${{ steps.upload_artifact.outputs.artifact_id }}
 
     steps:
-      # ------------------------------
-      # 1. Checkout Repo
-      # ------------------------------
+      # Checkout
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # ------------------------------
-      # 2. Setup Node
-      # ------------------------------
+      # Setup Node
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           registry-url: "https://registry.npmjs.org/"
 
-      # ------------------------------
-      # 3. Install dependencies
-      # ------------------------------
+      # Install deps
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
-      # ------------------------------
-      # 4. Build Library
-      # ------------------------------
+      # Build Library
       - name: Build library
         run: npm run build
 
-      # ------------------------------
-      # 5. Build Playground
-      # ------------------------------
+      # Build Playground
       - name: Build Playground
         run: |
           cd examples/playground
@@ -55,9 +48,14 @@ jobs:
           npm run build
           cd ../..
 
-      # ------------------------------
-      # 6. Bump version
-      # ------------------------------
+      # Upload artifact for GitHub Pages
+      - name: Upload playground artifact
+        id: upload_artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: examples/playground/dist
+
+      # Bump Version
       - name: Bump patch version
         id: bump_version
         run: |
@@ -67,42 +65,29 @@ jobs:
           echo "package_version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
           git push origin main --follow-tags
 
-      # ------------------------------
-      # 7. Generate Changelog
-      # ------------------------------
+      # Generate Changelog
       - name: Generate Changelog
         run: |
           npx auto-changelog -p
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add CHANGELOG.md
           git commit -m "chore: update changelog for v${{ steps.bump_version.outputs.package_version }}"
           git push
 
-      # ------------------------------
-      # 8. Publish to npm
-      # ------------------------------
+      # Publish to npm
       - name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish --access public
 
-      # ------------------------------
-      # 9. Upload Playground Dist for GitHub Pages
-      # ------------------------------
-      - name: Upload playground artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: examples/playground/dist
+  deploy-pages:
+    needs: build-and-release
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
 
-      # ------------------------------
-      # 10. Deploy to GitHub Pages
-      # ------------------------------
+    runs-on: ubuntu-latest
+
+    steps:
       - name: Deploy to GitHub Pages
+        id: deploy
         uses: actions/deploy-pages@v4
-
-      # ------------------------------
-      # 11. Done
-      # ------------------------------
-      - name: Done
-        run: echo "Release pipeline completed!"
