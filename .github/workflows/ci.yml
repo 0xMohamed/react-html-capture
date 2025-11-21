@@ -35,16 +35,12 @@ jobs:
           registry-url: "https://registry.npmjs.org/"
 
       # ------------------------------
-      # 3. Install dependencies
+      # 3. Install dependencies (clean install)
       # ------------------------------
-      - name: Install dependencies
-        run: npm ci
-
-      # ------------------------------
-      # 4. Run tests (اختياري حسب المكتبة)
-      # ------------------------------
-      - name: Run tests
-        run: npm test || echo "No tests configured"
+      - name: Clean install dependencies
+        run: |
+          rm -rf node_modules package-lock.json
+          npm install
 
       # ------------------------------
       # 5. Build library
