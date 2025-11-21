@@ -11,8 +11,8 @@ permissions:
   id-token: write
 
 jobs:
-  build-and-release:
-    name: Build → Test → Release
+  build-test-release:
+    name: Build → Test → Release → Deploy Playground
     runs-on: ubuntu-latest
 
     steps:
@@ -52,6 +52,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           npm version patch -m "chore: bump version to %s"
+          echo "package_version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
           git push origin main --follow-tags
 
       # Generate Changelog
@@ -68,14 +69,10 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish --access public
 
-  deploy-pages:
-    needs: build-and-release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy to GitHub Pages
+      # Deploy Playground to GitHub Pages
+      - name: Deploy Playground to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./examples/playground/dist
-          # Optional: commit message
           commit_message: "chore: update playground build [skip ci]"
