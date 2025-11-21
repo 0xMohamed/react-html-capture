@@ -6,7 +6,7 @@ export default function ExampleShadowDom() {
   const shadowRef = useRef<HTMLElement | null>(null);
   const [imgUrl, setImgUrl] = useState<string | null>(null);
 
-  const { capture } = useHtmlCapture(shadowRef);
+  const { capture } = useHtmlCapture(hostRef);
 
   useEffect(() => {
     if (!hostRef.current) return;

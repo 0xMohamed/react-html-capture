@@ -18,7 +18,6 @@
     "dist"
   ],
   "scripts": {
-    "dev": "vite",
     "build": "tsup src/index.ts --format cjs,esm --dts",
     "lint": "eslint .",
     "test": "vitest",
