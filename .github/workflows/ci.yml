@@ -51,7 +51,7 @@ jobs:
       - name: Build Playground
         run: |
           cd examples/playground
-          npm ci
+          npm install
           npm run build
           cd ../..
 
