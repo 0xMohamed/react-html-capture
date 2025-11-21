@@ -50,9 +50,9 @@ jobs:
       - name: Bump version
         id: bump_version
         run: |
-          git config user.name "github-actions\[bot\]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          npm version patch -m "chore(release): %s"
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          npm version patch -m 'chore(release): %s'
           echo "package_version=$(node -p \"require('./package.json').version\")" >> $GITHUB_OUTPUT
 
       - name: Generate and push changelog
