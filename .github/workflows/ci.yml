@@ -15,9 +15,6 @@ jobs:
     name: Build → Test → Release
     runs-on: ubuntu-latest
 
-    outputs:
-      pages_artifact: ${{ steps.upload_artifact.outputs.artifact_id }}
-
     steps:
       # Checkout
       - name: Checkout repository
@@ -48,13 +45,6 @@ jobs:
           npm run build
           cd ../..
 
-      # Upload artifact for GitHub Pages
-      - name: Upload playground artifact
-        id: upload_artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: examples/playground/dist
-
       # Bump Version
       - name: Bump patch version
         id: bump_version
@@ -62,7 +52,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           npm version patch -m "chore: bump version to %s"
-          echo "package_version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
           git push origin main --follow-tags
 
       # Generate Changelog
@@ -70,7 +59,7 @@ jobs:
         run: |
           npx auto-changelog -p
           git add CHANGELOG.md
-          git commit -m "chore: update changelog for v${{ steps.bump_version.outputs.package_version }}"
+          git commit -m "chore: update changelog for v${{ steps.bump_version.outputs.package_version }}" || echo "No changes to commit"
           git push
 
       # Publish to npm
@@ -83,21 +72,10 @@ jobs:
     needs: build-and-release
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout gh-pages branch
-        uses: actions/checkout@v4
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          ref: gh-pages
-          fetch-depth: 0
-
-      - name: Download artifact
-        uses: actions/download-pages-artifact@v3
-        with:
-          artifact_id: ${{ needs.build-and-release.outputs.pages_artifact }}
-
-      - name: Commit and push to gh-pages
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
-          git commit -m "chore: update playground build [skip ci]" || echo "No changes to commit"
-          git push origin gh-pages
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./examples/playground/dist
+          # Optional: commit message
+          commit_message: "chore: update playground build [skip ci]"
