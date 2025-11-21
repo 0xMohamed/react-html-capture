@@ -81,12 +81,7 @@ jobs:
 
   deploy-pages:
     needs: build-and-release
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
-
     runs-on: ubuntu-latest
-
     steps:
       - name: Deploy to GitHub Pages
         id: deploy
