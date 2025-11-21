@@ -99,7 +99,7 @@ jobs:
           npm run build
 
       - name: Deploy Playground to gh-pages
-        uses: peaceiris/actions-gh-pages@v7
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./examples/playground/dist
