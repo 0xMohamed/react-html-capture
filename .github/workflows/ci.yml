@@ -46,12 +46,6 @@ jobs:
         run: npm run build
 
       # ------------------------------
-      # 5. Build Storybook
-      # ------------------------------
-      - name: Build Storybook
-        run: npm run build-storybook --if-present
-
-      # ------------------------------
       # 6. Bump version if needed
       # ------------------------------
       - name: Bump patch version
