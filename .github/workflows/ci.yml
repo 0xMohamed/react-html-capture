@@ -46,7 +46,17 @@ jobs:
         run: npm run build
 
       # ------------------------------
-      # 6. Bump version if needed
+      # 5. Build Playground
+      # ------------------------------
+      - name: Build Playground
+        run: |
+          cd examples/playground
+          npm ci
+          npm run build
+          cd ../..
+
+      # ------------------------------
+      # 6. Bump version
       # ------------------------------
       - name: Bump patch version
         id: bump_version
@@ -78,7 +88,21 @@ jobs:
         run: npm publish --access public
 
       # ------------------------------
-      # 10. Done
+      # 9. Upload Playground Dist for GitHub Pages
+      # ------------------------------
+      - name: Upload playground artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: examples/playground/dist
+
+      # ------------------------------
+      # 10. Deploy to GitHub Pages
+      # ------------------------------
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
+
+      # ------------------------------
+      # 11. Done
       # ------------------------------
       - name: Done
         run: echo "Release pipeline completed!"
