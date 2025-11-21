@@ -82,11 +82,22 @@ jobs:
   deploy-pages:
     needs: build-and-release
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
     steps:
-      - name: Deploy to GitHub Pages
-        id: deploy
-        uses: actions/deploy-pages@v4
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 0
+
+      - name: Download artifact
+        uses: actions/download-pages-artifact@v3
         with:
           artifact_id: ${{ needs.build-and-release.outputs.pages_artifact }}
+
+      - name: Commit and push to gh-pages
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "chore: update playground build [skip ci]" || echo "No changes to commit"
+          git push origin gh-pages
