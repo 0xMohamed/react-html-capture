@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -47,21 +49,22 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Bump version
+      - name: Bump patch version
         id: bump_version
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           npm version patch -m "chore: bump version to %s"
           echo "package_version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+          git push origin main --follow-tags
 
-      - name: Generate and push changelog
+      - name: Generate Changelog
         run: |
           npx auto-changelog -p
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add CHANGELOG.md
-          git commit -m "chore: update changelog for v${{ steps.bump_version.outputs.package_version }}" || echo "No changes to commit"
+          git commit -m "chore: update changelog for v${{ steps.bump_version.outputs.package_version }}"
           git push
 
       - name: Semantic Release
