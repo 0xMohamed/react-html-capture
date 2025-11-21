@@ -19,7 +19,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 20
-          cache: "npm"
           registry-url: "https://registry.npmjs.org"
 
       # Install dependencies
@@ -73,7 +72,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 20
-          cache: "npm"
 
       # Install Playground dependencies
       - name: Install Playground dependencies
