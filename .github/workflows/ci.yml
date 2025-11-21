@@ -48,16 +48,19 @@ jobs:
       - name: Build library
         run: npm run build
 
-      # ------------------------------
-      # 6. Bump patch version
-      # ------------------------------
+      # Clean any pending changes
+      - name: Commit pending changes
+        run: |
+          git add -A
+          git commit -m "chore: pre-bump cleanup" || echo "No changes to commit"
+
+      # Bump patch version
       - name: Bump patch version
         id: bump_version
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           npm version patch -m "chore: bump version to %s"
-          echo "package_version=$(node -p \"require('./package.json').version\")" >> $GITHUB_OUTPUT
           git push origin main --follow-tags
 
       # ------------------------------
