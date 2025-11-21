@@ -11,29 +11,37 @@ jobs:
     name: Auto Release Library
     runs-on: ubuntu-latest
     steps:
+      # Checkout repo
       - uses: actions/checkout@v3
 
+      # Setup Node + caching
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
+          cache: "npm"
           registry-url: "https://registry.npmjs.org"
 
+      # Install dependencies
       - name: Install dependencies
         run: npm ci
 
+      # Run tests
       - name: Run tests
         run: npm test
 
+      # Bump patch version automatically
       - name: Bump version
         id: version
         run: |
           npm version patch -m "chore: release %s"
           echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
 
+      # Build source
       - name: Build library
         run: npm run build
 
+      # Commit version bump and push tag
       - name: Push version commit & tag
         uses: stefanzweifel/git-auto-commit-action@v6
         with:
@@ -42,11 +50,13 @@ jobs:
           branch: main
           file_pattern: "package.json"
 
+      # Add NPM token
       - name: Authenticate to NPM
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
 
+      # Publish package
       - name: Publish package
         run: npm publish --access public
 
@@ -55,38 +65,36 @@ jobs:
     runs-on: ubuntu-latest
     needs: release
     steps:
+      # Checkout repo
       - uses: actions/checkout@v3
 
+      # Setup Node + caching
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
           cache: "npm"
 
-      - name: Cache Playground Node modules
-        uses: actions/cache@v3
-        with:
-          path: examples/playground/node_modules
-          key: ${{ runner.os }}-playground-npm-${{ hashFiles('examples/playground/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-playground-npm-
-
+      # Install Playground dependencies
       - name: Install Playground dependencies
         run: |
           cd examples/playground
           npm ci
 
+      # Build Playground
       - name: Build Playground
         run: |
           cd examples/playground
           npm run build
 
+      # Prepare deploy folder
       - name: Prepare gh-pages
         run: |
           rm -rf gh-pages-temp
           mkdir gh-pages-temp
           mv examples/playground/dist/* gh-pages-temp/
 
+      # Deploy to gh-pages
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v7
         with:
