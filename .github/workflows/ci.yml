@@ -31,11 +31,14 @@ jobs:
       #   run: npm test
 
       # Bump patch version automatically
-      - name: Bump version
-        id: version
+      - name: Bump patch version
+        id: bump_version
         run: |
-          npm version patch -m "chore: release %s"
-          echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          npm version patch -m "chore: bump version to %s"
+          echo "package_version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+          git push origin main --follow-tags
 
       # Build source
       - name: Build library
