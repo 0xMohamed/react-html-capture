@@ -6,7 +6,8 @@ export default defineConfig({
   dts: true,
   sourcemap: true,
   format: ["cjs", "esm"],
-  minify: false,
+  minify: true,
+  bundle: true,
   target: "es2020",
   external: ["react", "react-dom"],
 });

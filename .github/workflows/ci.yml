@@ -1,127 +1,72 @@
-name: Library Release & Playground Deploy
+name: CI & Release
 
 on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
-  release:
-    name: Auto Release Library
+  build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
     steps:
-      # ------------------------------
-      # 1. Checkout repo
-      # ------------------------------
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run build
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # ------------------------------
-      # 2. Setup Node.js
-      # ------------------------------
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          registry-url: "https://registry.npmjs.org/"
+          cache: npm
 
-      # ------------------------------
-      # 3. Clean install dependencies
-      # ------------------------------
-      - name: Clean install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      - name: Generate changelog
+        run: npx auto-changelog -p
+
+      - name: Commit changelog
         run: |
-          rm -rf node_modules package-lock.json
-          npm install
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add CHANGELOG.md
+          git commit -m "docs: update changelog" || echo "No changes to commit"
 
-      # ------------------------------
-      # 4. Commit any changes (lock files, etc.)
-      # ------------------------------
-      - name: Commit pre-bump changes
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "chore: pre-bump cleanup" || echo "No changes to commit"
+      - name: Push changes
+        run: git push
 
-      # ------------------------------
-      # 5. Bump patch version
-      # ------------------------------
-      - name: Bump patch version
-        id: bump_version
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          npm version patch -m "chore: bump version to %s"
-          echo "package_version=$(node -p 'require(\"./package.json\").version')" >> $GITHUB_OUTPUT
-          git push origin main --follow-tags
-
-      # ------------------------------
-      # 6. Build library
-      # ------------------------------
-      - name: Build library
-        run: npm run build
-
-      # ------------------------------
-      # 7. Authenticate to NPM
-      # ------------------------------
-      - name: Authenticate to NPM
+      - name: Semantic Release
+        run: npx semantic-release
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # ------------------------------
-      # 8. Publish package
-      # ------------------------------
       - name: Publish package
         run: npm publish --access public
-
-  playground:
-    name: Build & Deploy Playground
-    runs-on: ubuntu-latest
-    needs: release
-    steps:
-      # ------------------------------
-      # 1. Checkout repo
-      # ------------------------------
-      - uses: actions/checkout@v4
-
-      # ------------------------------
-      # 2. Setup Node.js
-      # ------------------------------
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      # ------------------------------
-      # 3. Install playground dependencies
-      # ------------------------------
-      - name: Install Playground dependencies
-        run: |
-          cd examples/playground
-          rm -rf node_modules package-lock.json
-          npm install
-
-      # ------------------------------
-      # 4. Build playground
-      # ------------------------------
-      - name: Build Playground
-        run: |
-          cd examples/playground
-          npm run build
-
-      # ------------------------------
-      # 5. Deploy to gh-pages
-      # ------------------------------
-      - name: Deploy to gh-pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: ./examples/playground/dist
-          commit_message: "Deploy playground v${{ steps.bump_version.outputs.package_version }}"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
