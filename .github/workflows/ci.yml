@@ -25,6 +25,9 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Lint
+        run: npm run lint
+
       - name: Build
         run: npm run build
 
@@ -47,18 +50,20 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Generate changelog
-        run: npx auto-changelog -p
-
-      - name: Commit changelog
+      - name: Bump version
+        id: bump_version
         run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git add CHANGELOG.md
-          git commit -m "docs: update changelog" || echo "No changes to commit"
+          npm version patch -m "chore(release): %s"
+          echo "::set-output name=package_version::$(node -p \"require('./package.json').version\")"
 
-      - name: Push changes
-        run: git push
+      - name: Generate and push changelog
+        run: |
+          npx auto-changelog -p
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git commit -m "chore: update changelog for v${{ steps.bump_version.outputs.package_version }}" || echo "No changes to commit"
+          git push
 
       - name: Semantic Release
         run: npx semantic-release
