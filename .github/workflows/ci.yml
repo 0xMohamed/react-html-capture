@@ -1,54 +1,59 @@
-name: CI & Release
+name: Release Pipeline
 
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
-  workflow_dispatch:
 
 jobs:
-  build:
+  build-and-release:
+    name: Build → Test → Release
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+
     steps:
+      # ------------------------------
+      # 1. Checkout Repo
+      # ------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup Node
+      # ------------------------------
+      # 2. Setup Node
+      # ------------------------------
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
+          registry-url: "https://registry.npmjs.org/"
 
+      # ------------------------------
+      # 3. Install dependencies
+      # ------------------------------
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Build
+      # ------------------------------
+      # 4. Build Library
+      # ------------------------------
+      - name: Build library
         run: npm run build
 
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      # ------------------------------
+      # 5. Build Storybook
+      # ------------------------------
+      - name: Build Storybook
+        run: npm run build-storybook --if-present
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-
-      - name: Install dependencies
-        run: npm install
-
+      # ------------------------------
+      # 6. Bump version if needed
+      # ------------------------------
       - name: Bump patch version
         id: bump_version
         run: |
@@ -58,6 +63,9 @@ jobs:
           echo "package_version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
           git push origin main --follow-tags
 
+      # ------------------------------
+      # 7. Generate Changelog
+      # ------------------------------
       - name: Generate Changelog
         run: |
           npx auto-changelog -p
@@ -67,13 +75,16 @@ jobs:
           git commit -m "chore: update changelog for v${{ steps.bump_version.outputs.package_version }}"
           git push
 
-      - name: Semantic Release
-        run: npx semantic-release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Publish package
-        run: npm publish --access public
+      # ------------------------------
+      # 8. Publish to npm
+      # ------------------------------
+      - name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
+
+      # ------------------------------
+      # 10. Done
+      # ------------------------------
+      - name: Done
+        run: echo "Release pipeline completed!"
